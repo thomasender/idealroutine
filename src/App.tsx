@@ -277,8 +277,9 @@ function App() {
                   onClick={handlePreviousExercise}
                   disabled={isFirstExercise}
                   className="nav-button"
+                  aria-label="Previous Exercise"
                 >
-                  ← Previous Exercise
+                  ←
                 </button>
                 <span className="exercise-counter">
                   Exercise {currentExerciseIndex + 1} of {routine[selectedDay].exerciseIds.length}
@@ -288,8 +289,9 @@ function App() {
                   onClick={handleNextExercise}
                   disabled={isLastExercise}
                   className="nav-button"
+                  aria-label="Next Exercise"
                 >
-                  Next Exercise →
+                  →
                 </button>
               </div>
 
