@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { auth, firestore } from './firebase'
+import { auth, firestore } from './firebase.js'
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, User, onAuthStateChanged } from 'firebase/auth'
 import { collection, doc, getDocs, setDoc, query, orderBy, limit } from 'firebase/firestore'
 import './App.css'
@@ -66,6 +66,8 @@ type HistoryEntry = {
   date: string
   data: DayData
 }
+
+type ExerciseId = keyof typeof exercises;
 
 function getTodayDate() {
   const d = new Date()
@@ -253,7 +255,7 @@ function App() {
     }
   }
 
-  const currentExerciseId = routine[selectedDay].exerciseIds[currentExerciseIndex]
+  const currentExerciseId = routine[selectedDay].exerciseIds[currentExerciseIndex] as ExerciseId;
   const isFirstExercise = currentExerciseIndex === 0
   const isLastExercise = currentExerciseIndex === routine[selectedDay].exerciseIds.length - 1
 
@@ -433,7 +435,7 @@ function App() {
                   <tr>
                     <th>Date</th>
                     {routine[selectedDay].exerciseIds.map(exerciseId => (
-                      <th key={exerciseId}>{exercises[exerciseId].name}</th>
+                      <th key={exerciseId}>{exercises[exerciseId as ExerciseId].name}</th>
                     ))}
                   </tr>
                 </thead>
@@ -442,7 +444,7 @@ function App() {
                     <tr key={h.date}>
                       <td data-label="Date">{formatDateWithDay(h.date)}</td>
                       {routine[selectedDay].exerciseIds.map(exerciseId => (
-                        <td key={exerciseId} data-label={exercises[exerciseId].name}>
+                        <td key={exerciseId} data-label={exercises[exerciseId as ExerciseId].name}>
                           {h.data[exerciseId]?.weight || ''}kg, {h.data[exerciseId]?.reps || ''} reps, {h.data[exerciseId]?.failure ? 'Fail' : ''} {h.data[exerciseId]?.comments || ''}
                         </td>
                       ))}
