@@ -72,6 +72,13 @@ function getTodayDate() {
   return d.toISOString().slice(0, 10) // YYYY-MM-DD
 }
 
+function formatDateWithDay(dateStr: string) {
+  const date = new Date(dateStr)
+  const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+  const day = days[date.getDay()]
+  return `${dateStr} (${day})`
+}
+
 // Helper function to find exercise ID from old name
 function findExerciseId(oldName: string): string | undefined {
   const normalizedName = oldName.toLowerCase()
@@ -387,7 +394,7 @@ function App() {
                 <tbody>
                   {history.map((h) => (
                     <tr key={h.date}>
-                      <td data-label="Date">{h.date}</td>
+                      <td data-label="Date">{formatDateWithDay(h.date)}</td>
                       {routine[selectedDay].exerciseIds.map(exerciseId => (
                         <td key={exerciseId} data-label={exercises[exerciseId].name}>
                           {h.data[exerciseId]?.weight || ''}kg, {h.data[exerciseId]?.reps || ''} reps, {h.data[exerciseId]?.failure ? 'Fail' : ''} {h.data[exerciseId]?.comments || ''}
