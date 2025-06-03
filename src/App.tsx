@@ -104,6 +104,7 @@ function App() {
   const [error, setError] = useState('')
   const [isLogin, setIsLogin] = useState(true)
   const [selectedDay, setSelectedDay] = useState(0)
+  const [currentExerciseIndex, setCurrentExerciseIndex] = useState(0)
   const [formData, setFormData] = useState<DayData>({})
   const [loading, setLoading] = useState(false)
   const [saveMsg, setSaveMsg] = useState('')
@@ -151,6 +152,11 @@ function App() {
     // When day changes, open only the first exercise by default
     const first = routine[selectedDay].exerciseIds[0]
     setOpenExercises({ [first]: true })
+  }, [selectedDay])
+
+  useEffect(() => {
+    // When day changes, reset the exercise index to 0
+    setCurrentExerciseIndex(0)
   }, [selectedDay])
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -220,6 +226,22 @@ function App() {
     setEditingDate(null)
   }
 
+  const handleNextExercise = () => {
+    if (currentExerciseIndex < routine[selectedDay].exerciseIds.length - 1) {
+      setCurrentExerciseIndex(prev => prev + 1)
+    }
+  }
+
+  const handlePreviousExercise = () => {
+    if (currentExerciseIndex > 0) {
+      setCurrentExerciseIndex(prev => prev - 1)
+    }
+  }
+
+  const currentExerciseId = routine[selectedDay].exerciseIds[currentExerciseIndex]
+  const isFirstExercise = currentExerciseIndex === 0
+  const isLastExercise = currentExerciseIndex === routine[selectedDay].exerciseIds.length - 1
+
   return (
     <div className="App">
       <h1>Mentzer Tracker</h1>
@@ -249,83 +271,103 @@ function App() {
               }}
               className="routine-form"
             >
-              {routine[selectedDay].exerciseIds.map((exerciseId) => {
-                const exercise = exercises[exerciseId]
-                const entry = formData[exerciseId] || { weight: '', reps: '', failure: false, comments: '' }
-                const last = lastEntry?.[exerciseId]
-                const isOpen = openExercises[exerciseId] || false
+              <div className="exercise-navigation">
+                <button
+                  type="button"
+                  onClick={handlePreviousExercise}
+                  disabled={isFirstExercise}
+                  className="nav-button"
+                >
+                  ← Previous Exercise
+                </button>
+                <span className="exercise-counter">
+                  Exercise {currentExerciseIndex + 1} of {routine[selectedDay].exerciseIds.length}
+                </span>
+                <button
+                  type="button"
+                  onClick={handleNextExercise}
+                  disabled={isLastExercise}
+                  className="nav-button"
+                >
+                  Next Exercise →
+                </button>
+              </div>
+
+              {(() => {
+                const exercise = exercises[currentExerciseId]
+                const entry = formData[currentExerciseId] || { weight: '', reps: '', failure: false, comments: '' }
+                const last = lastEntry?.[currentExerciseId]
                 return (
-                  <div key={exerciseId} className="exercise-entry">
+                  <div className="exercise-entry">
                     <div className="exercise-header">
                       <h3 className="exercise-title">{exercise.name}</h3>
                       <div className="rep-goal">Rep Goal: {exercise.repGoal}</div>
-                      <button
-                        type="button"
-                        className="collapse-toggle"
-                        aria-label={isOpen ? `Collapse ${exercise.name}` : `Expand ${exercise.name}`}
-                        onClick={() => setOpenExercises((prev) => ({ ...prev, [exerciseId]: !isOpen }))}
-                      >
-                        <span className={isOpen ? 'open' : ''}>▶</span>
-                      </button>
                     </div>
-                    {isOpen && (
-                      <div className="exercise-fields">
-                        <label>
-                          Weight (kg/lb):
-                          <input
-                            type="number"
-                            min="0"
-                            step="0.5"
-                            value={entry.weight}
-                            onChange={(e) => handleInputChange(exerciseId, 'weight', e.target.value)}
-                          />
-                          {last && last.weight && (
-                            <span className="last-info">Last: {last.weight}</span>
-                          )}
-                        </label>
-                        <label>
-                          Reps:
-                          <input
-                            type="number"
-                            min="0"
-                            step="1"
-                            value={entry.reps}
-                            onChange={(e) => handleInputChange(exerciseId, 'reps', e.target.value)}
-                          />
-                          {last && last.reps && (
-                            <span className="last-info">Last: {last.reps}</span>
-                          )}
-                        </label>
-                        <label>
-                          Failure:
-                          <input
-                            type="checkbox"
-                            checked={entry.failure}
-                            onChange={(e) => handleInputChange(exerciseId, 'failure', e.target.checked)}
-                          />
-                          {last && (
-                            <span className="last-info">Last: {last.failure ? 'Yes' : 'No'}</span>
-                          )}
-                        </label>
-                        <label>
-                          Comments:
-                          <input
-                            type="text"
-                            value={entry.comments}
-                            onChange={(e) => handleInputChange(exerciseId, 'comments', e.target.value)}
-                          />
-                          {last && last.comments && (
-                            <span className="last-info">Last: {last.comments}</span>
-                          )}
-                        </label>
-                      </div>
-                    )}
+                    <div className="exercise-fields">
+                      <label>
+                        Weight (kg/lb):
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.5"
+                          value={entry.weight}
+                          onChange={(e) => handleInputChange(currentExerciseId, 'weight', e.target.value)}
+                        />
+                        {last && last.weight && (
+                          <span className="last-info">Last: {last.weight}</span>
+                        )}
+                      </label>
+                      <label>
+                        Reps:
+                        <input
+                          type="number"
+                          min="0"
+                          step="1"
+                          value={entry.reps}
+                          onChange={(e) => handleInputChange(currentExerciseId, 'reps', e.target.value)}
+                        />
+                        {last && last.reps && (
+                          <span className="last-info">Last: {last.reps}</span>
+                        )}
+                      </label>
+                      <label>
+                        Failure:
+                        <input
+                          type="checkbox"
+                          checked={entry.failure}
+                          onChange={(e) => handleInputChange(currentExerciseId, 'failure', e.target.checked)}
+                        />
+                        {last && (
+                          <span className="last-info">Last: {last.failure ? 'Yes' : 'No'}</span>
+                        )}
+                      </label>
+                      <label>
+                        Comments:
+                        <input
+                          type="text"
+                          value={entry.comments}
+                          onChange={(e) => handleInputChange(currentExerciseId, 'comments', e.target.value)}
+                        />
+                        {last && last.comments && (
+                          <span className="last-info">Last: {last.comments}</span>
+                        )}
+                      </label>
+                    </div>
                   </div>
                 )
-              })}
-              <button type="submit" disabled={loading}>{editingDate ? 'Update Entry' : 'Save Progress'}</button>
-              {editingDate && <button type="button" onClick={handleCancelEdit}>Cancel Edit</button>}
-              {saveMsg && <span className="save-msg">{saveMsg}</span>}
+              })()}
+
+              <div className="form-actions">
+                <button type="submit" disabled={loading}>
+                  {editingDate ? 'Update Entry' : 'Save Progress'}
+                </button>
+                {editingDate && (
+                  <button type="button" onClick={handleCancelEdit}>
+                    Cancel Edit
+                  </button>
+                )}
+                {saveMsg && <span className="save-msg">{saveMsg}</span>}
+              </div>
             </form>
           )}
           {history.length > 0 && (
