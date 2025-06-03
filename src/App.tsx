@@ -119,10 +119,14 @@ function App() {
   const [lastEntry, setLastEntry] = useState<DayData | null>(null)
   const [editingDate, setEditingDate] = useState<string | null>(null)
   const [openExercises, setOpenExercises] = useState<{ [exerciseId: string]: boolean }>({})
+  const [lastSessionInfo, setLastSessionInfo] = useState<{ day: string; date: string } | null>(null)
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser: User | null) => {
       setUser(firebaseUser)
+      if (firebaseUser) {
+        findLastSession()
+      }
     })
     return () => unsubscribe()
   }, [])
@@ -151,6 +155,8 @@ function App() {
       setLastEntry(entries[0]?.data || null)
       setFormData({}) // always start with empty form
       setLoading(false)
+      // Find last session after loading history
+      await findLastSession()
     }
     fetchHistory()
   }, [user, selectedDay])
@@ -231,6 +237,8 @@ function App() {
     setLastEntry(entries[0]?.data || null)
     setFormData({})
     setEditingDate(null)
+    // Update last session info after saving
+    await findLastSession()
   }
 
   const handleNextExercise = () => {
@@ -249,6 +257,37 @@ function App() {
   const isFirstExercise = currentExerciseIndex === 0
   const isLastExercise = currentExerciseIndex === routine[selectedDay].exerciseIds.length - 1
 
+  // Add this new function to find the last session
+  const findLastSession = async () => {
+    if (!user) return
+
+    let mostRecentDate = ''
+    let mostRecentDay = ''
+    
+    for (const day of routine) {
+      const entriesRef = collection(firestore, 'progress', user.uid, day.day)
+      const q = query(entriesRef, orderBy('date', 'desc'), limit(1))
+      const querySnapshot = await getDocs(q)
+      
+      if (!querySnapshot.empty) {
+        const doc = querySnapshot.docs[0]
+        const date = doc.id
+        
+        if (!mostRecentDate || date > mostRecentDate) {
+          mostRecentDate = date
+          mostRecentDay = day.day
+        }
+      }
+    }
+
+    if (mostRecentDate) {
+      setLastSessionInfo({
+        day: mostRecentDay,
+        date: mostRecentDate
+      })
+    }
+  }
+
   return (
     <div className="App">
       <h1>Mentzer Tracker</h1>
@@ -256,6 +295,13 @@ function App() {
         <div>
           <p>Welcome, {user.email}!</p>
           <button onClick={handleLogout}>Logout</button>
+          
+          {lastSessionInfo && (
+            <div className="last-session-info">
+              Last session: {lastSessionInfo.day} ({formatDateWithDay(lastSessionInfo.date)})
+            </div>
+          )}
+
           <div className="routine-tabs">
             {routine.map((day, idx) => (
               <button
