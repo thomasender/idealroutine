@@ -4,47 +4,50 @@ import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, Us
 import { collection, doc, getDocs, setDoc, query, orderBy, limit } from 'firebase/firestore'
 import './App.css'
 
+// Define all available exercises with unique IDs
+const exercises = {
+  'ex-1': { id: 'ex-1', name: 'Peck Deck', oldNames: ['peck deck'], repGoal: '6 - 10' },
+  'ex-2': { id: 'ex-2', name: 'Incline Press', oldNames: ['incline press'], repGoal: '1 - 3' },
+  'ex-3': { id: 'ex-3', name: 'Close Grip Pull Down', oldNames: ['close grip pull down'], repGoal: '6 - 10' },
+  'ex-4': { id: 'ex-4', name: 'Deadlift', oldNames: ['deadlift'], repGoal: '5 - 8' },
+  'ex-5': { id: 'ex-5', name: 'Ab Crunch', oldNames: ['Ab crunch', 'ab crunch'], repGoal: '5 - 8' },
+  'ex-6': { id: 'ex-6', name: 'Leg Extensions', oldNames: ['leg extensions'], repGoal: '8 - 15' },
+  'ex-7': { id: 'ex-7', name: 'Leg Press', oldNames: ['leg press'], repGoal: '8 - 15' },
+  'ex-8': { id: 'ex-8', name: 'Calf Raises', oldNames: ['calf raises'], repGoal: '12 - 20' },
+  'ex-9': { id: 'ex-9', name: 'Abductor', oldNames: ['Abductor'], repGoal: '8 - 15' },
+  'ex-10': { id: 'ex-10', name: 'Adductor', oldNames: ['Adductor'], repGoal: '8 - 15' },
+  'ex-11': { id: 'ex-11', name: 'Lateral Raise', oldNames: ['Lateral raise'], repGoal: '6 - 10' },
+  'ex-12': { id: 'ex-12', name: 'Bend Over Raise', oldNames: ['bend over raise'], repGoal: '6 - 10' },
+  'ex-13': { id: 'ex-13', name: 'Barbell Curl', oldNames: ['barbell curl'], repGoal: '6 - 10' },
+  'ex-14': { id: 'ex-14', name: 'Triceps Extensions', oldNames: ['triceps extensions'], repGoal: '6 - 10' },
+  'ex-15': { id: 'ex-15', name: 'Dips', oldNames: ['dips'], repGoal: '3 - 5' },
+  'ex-16': { id: 'ex-16', name: 'Leg Extensions Static Hold', oldNames: ['leg extensions static hold'], repGoal: 'hold' },
+  'ex-17': { id: 'ex-17', name: 'Squats', oldNames: ['squats'], repGoal: '8 - 15' },
+} as const
+
+type Exercise = {
+  id: string
+  name: string
+  oldNames: string[]
+  repGoal: string
+}
+
 const routine = [
   {
     day: 'Day 1',
-    exercises: [
-      'peck deck',
-      'incline press',
-      'close grip pull down',
-      'deadlift',
-      'Ab crunch',
-    ],
+    exerciseIds: ['ex-1', 'ex-2', 'ex-3', 'ex-4', 'ex-5'],
   },
   {
     day: 'Day 2',
-    exercises: [
-      'leg extensions',
-      'leg press',
-      'calf raises',
-      'Ab crunch',
-      'Abductor',
-      'Adductor',
-    ],
+    exerciseIds: ['ex-6', 'ex-7', 'ex-8', 'ex-5', 'ex-9', 'ex-10'],
   },
   {
     day: 'Day 3',
-    exercises: [
-      'Lateral raise',
-      'bend over raise',
-      'barbell curl',
-      'triceps extensions',
-      'dips',
-      'Ab crunch',
-    ],
+    exerciseIds: ['ex-11', 'ex-12', 'ex-13', 'ex-14', 'ex-15', 'ex-5'],
   },
   {
     day: 'Day 4',
-    exercises: [
-      'leg extensions static hold',
-      'squats',
-      'calf raises',
-      'Ab crunch',
-    ],
+    exerciseIds: ['ex-16', 'ex-17', 'ex-8', 'ex-5'],
   },
 ]
 
@@ -56,11 +59,7 @@ type ExerciseEntry = {
 }
 
 type DayData = {
-  [exercise: string]: ExerciseEntry
-}
-
-type RoutineData = {
-  [day: string]: DayData
+  [exerciseId: string]: ExerciseEntry
 }
 
 type HistoryEntry = {
@@ -71,6 +70,31 @@ type HistoryEntry = {
 function getTodayDate() {
   const d = new Date()
   return d.toISOString().slice(0, 10) // YYYY-MM-DD
+}
+
+// Helper function to find exercise ID from old name
+function findExerciseId(oldName: string): string | undefined {
+  const normalizedName = oldName.toLowerCase()
+  for (const [id, exercise] of Object.entries(exercises)) {
+    if (exercise.oldNames.some(name => name.toLowerCase() === normalizedName)) {
+      return id
+    }
+  }
+  return undefined
+}
+
+// Helper function to migrate old data format to new format
+function migrateData(oldData: any): DayData {
+  const newData: DayData = {}
+  for (const [oldName, entry] of Object.entries(oldData)) {
+    if (typeof entry === 'object' && entry !== null) {
+      const exerciseId = findExerciseId(oldName as string)
+      if (exerciseId) {
+        newData[exerciseId] = entry as ExerciseEntry
+      }
+    }
+  }
+  return newData
 }
 
 function App() {
@@ -86,7 +110,7 @@ function App() {
   const [history, setHistory] = useState<HistoryEntry[]>([])
   const [lastEntry, setLastEntry] = useState<DayData | null>(null)
   const [editingDate, setEditingDate] = useState<string | null>(null)
-  const [openExercises, setOpenExercises] = useState<{ [exercise: string]: boolean }>({})
+  const [openExercises, setOpenExercises] = useState<{ [exerciseId: string]: boolean }>({})
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser: User | null) => {
@@ -111,7 +135,9 @@ function App() {
       const querySnapshot = await getDocs(q)
       const entries: HistoryEntry[] = []
       querySnapshot.forEach((docSnap) => {
-        entries.push({ date: docSnap.id, data: docSnap.data() as DayData })
+        const oldData = docSnap.data()
+        const migratedData = migrateData(oldData)
+        entries.push({ date: docSnap.id, data: migratedData })
       })
       setHistory(entries)
       setLastEntry(entries[0]?.data || null)
@@ -123,7 +149,7 @@ function App() {
 
   useEffect(() => {
     // When day changes, open only the first exercise by default
-    const first = routine[selectedDay].exercises[0]
+    const first = routine[selectedDay].exerciseIds[0]
     setOpenExercises({ [first]: true })
   }, [selectedDay])
 
@@ -145,11 +171,11 @@ function App() {
     await signOut(auth)
   }
 
-  const handleInputChange = (exercise: string, field: keyof ExerciseEntry, value: string | boolean) => {
+  const handleInputChange = (exerciseId: string, field: keyof ExerciseEntry, value: string | boolean) => {
     setFormData((prev) => ({
       ...prev,
-      [exercise]: {
-        ...prev[exercise],
+      [exerciseId]: {
+        ...prev[exerciseId],
         [field]: value,
       },
     }))
@@ -173,7 +199,7 @@ function App() {
     const dateToSave = editingDate || getTodayDate()
     // Fill missing exercises with empty values
     const entry: DayData = {}
-    for (const ex of routine[selectedDay].exercises) {
+    for (const ex of routine[selectedDay].exerciseIds) {
       entry[ex] = formData[ex] || { weight: '', reps: '', failure: false, comments: '' }
     }
     await setDoc(doc(firestore, 'progress', user.uid, dayKey, dateToSave), { ...entry, date: dateToSave })
@@ -223,46 +249,35 @@ function App() {
               }}
               className="routine-form"
             >
-              {routine[selectedDay].exercises.map((exercise, idx) => {
-                const entry = formData[exercise] || { weight: '', reps: '', failure: false, comments: '' }
-                const last = lastEntry?.[exercise]
-                const isOpen = openExercises[exercise] || false
+              {routine[selectedDay].exerciseIds.map((exerciseId) => {
+                const exercise = exercises[exerciseId]
+                const entry = formData[exerciseId] || { weight: '', reps: '', failure: false, comments: '' }
+                const last = lastEntry?.[exerciseId]
+                const isOpen = openExercises[exerciseId] || false
                 return (
-                  <div key={exercise} className="exercise-entry" style={{ position: 'relative' }}>
-                    <h3 className="exercise-title" style={{ margin: 0, minWidth: '100%', textAlign: 'center' }}>{exercise}</h3>
-                    <button
-                      type="button"
-                      className="collapse-toggle"
-                      aria-label={isOpen ? `Collapse ${exercise}` : `Expand ${exercise}`}
-                      onClick={() => setOpenExercises((prev) => ({ ...prev, [exercise]: !isOpen }))}
-                      style={{
-                        width: 'fit-content',
-                        position: 'absolute',
-                        right: '1rem',
-                        top: '0.5rem',
-                        background: 'none',
-                        border: 'none',
-                        cursor: 'pointer',
-                        color: 'inherit',
-                        padding: '0.25em 0.5em',
-                        fontSize: '1.2em',
-                        lineHeight: 1,
-                        display: 'flex',
-                        alignItems: 'center',
-                      }}
-                    >
-                      <span style={{ display: 'inline-block', transition: 'transform 0.2s', transform: isOpen ? 'rotate(90deg)' : 'rotate(0deg)' }}>
-                        ▶
-                      </span>
-                    </button>
+                  <div key={exerciseId} className="exercise-entry">
+                    <div className="exercise-header">
+                      <h3 className="exercise-title">{exercise.name}</h3>
+                      <div className="rep-goal">Rep Goal: {exercise.repGoal}</div>
+                      <button
+                        type="button"
+                        className="collapse-toggle"
+                        aria-label={isOpen ? `Collapse ${exercise.name}` : `Expand ${exercise.name}`}
+                        onClick={() => setOpenExercises((prev) => ({ ...prev, [exerciseId]: !isOpen }))}
+                      >
+                        <span className={isOpen ? 'open' : ''}>▶</span>
+                      </button>
+                    </div>
                     {isOpen && (
                       <div className="exercise-fields">
                         <label>
                           Weight (kg/lb):
                           <input
-                            type="text"
+                            type="number"
+                            min="0"
+                            step="0.5"
                             value={entry.weight}
-                            onChange={(e) => handleInputChange(exercise, 'weight', e.target.value)}
+                            onChange={(e) => handleInputChange(exerciseId, 'weight', e.target.value)}
                           />
                           {last && last.weight && (
                             <span className="last-info">Last: {last.weight}</span>
@@ -272,8 +287,10 @@ function App() {
                           Reps:
                           <input
                             type="number"
+                            min="0"
+                            step="1"
                             value={entry.reps}
-                            onChange={(e) => handleInputChange(exercise, 'reps', e.target.value)}
+                            onChange={(e) => handleInputChange(exerciseId, 'reps', e.target.value)}
                           />
                           {last && last.reps && (
                             <span className="last-info">Last: {last.reps}</span>
@@ -284,7 +301,7 @@ function App() {
                           <input
                             type="checkbox"
                             checked={entry.failure}
-                            onChange={(e) => handleInputChange(exercise, 'failure', e.target.checked)}
+                            onChange={(e) => handleInputChange(exerciseId, 'failure', e.target.checked)}
                           />
                           {last && (
                             <span className="last-info">Last: {last.failure ? 'Yes' : 'No'}</span>
@@ -295,7 +312,7 @@ function App() {
                           <input
                             type="text"
                             value={entry.comments}
-                            onChange={(e) => handleInputChange(exercise, 'comments', e.target.value)}
+                            onChange={(e) => handleInputChange(exerciseId, 'comments', e.target.value)}
                           />
                           {last && last.comments && (
                             <span className="last-info">Last: {last.comments}</span>
@@ -318,8 +335,8 @@ function App() {
                 <thead className="history-thead">
                   <tr>
                     <th>Date</th>
-                    {routine[selectedDay].exercises.map(ex => (
-                      <th key={ex}>{ex}</th>
+                    {routine[selectedDay].exerciseIds.map(exerciseId => (
+                      <th key={exerciseId}>{exercises[exerciseId].name}</th>
                     ))}
                   </tr>
                 </thead>
@@ -327,9 +344,9 @@ function App() {
                   {history.map((h) => (
                     <tr key={h.date}>
                       <td data-label="Date">{h.date}</td>
-                      {routine[selectedDay].exercises.map(ex => (
-                        <td key={ex} data-label={ex}>
-                          {h.data[ex]?.weight || ''}kg, {h.data[ex]?.reps || ''} reps, {h.data[ex]?.failure ? 'Fail' : ''} {h.data[ex]?.comments || ''}
+                      {routine[selectedDay].exerciseIds.map(exerciseId => (
+                        <td key={exerciseId} data-label={exercises[exerciseId].name}>
+                          {h.data[exerciseId]?.weight || ''}kg, {h.data[exerciseId]?.reps || ''} reps, {h.data[exerciseId]?.failure ? 'Fail' : ''} {h.data[exerciseId]?.comments || ''}
                         </td>
                       ))}
                       <td data-label="Edit">

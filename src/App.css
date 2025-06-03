@@ -84,15 +84,62 @@ h1, h2, h3 {
 }
 
 .exercise-entry {
+  position: relative;
   background: #fff;
   border-radius: 8px;
   box-shadow: 0 1px 4px rgba(0,0,0,0.04);
   padding: 1rem;
   margin-bottom: 0.5rem;
+  display: flex;
+  flex-direction: column;
 }
-.exercise-entry h3 {
+
+.exercise-header {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   margin-bottom: 0.75rem;
-  font-size: 1.1rem;
+}
+
+.exercise-title {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: inherit;
+  text-align: center;
+}
+
+.rep-goal {
+  font-size: 0.9rem;
+  color: #666;
+  margin-top: 0.25rem;
+  text-align: center;
+}
+
+.collapse-toggle {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: inherit;
+  padding: 0.25em 0.5em;
+  font-size: 1.2em;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+}
+
+.exercise-entry h3 {
+  margin: 0;
+  padding: 0.5rem 0;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: inherit;
 }
 .exercise-entry label {
   display: flex;
@@ -116,6 +163,24 @@ h1, h2, h3 {
   margin-right: auto;
   text-align: center;
 }
+
+/* Only hide spinner buttons on mobile */
+@media (max-width: 600px) {
+  .exercise-entry input[type="number"] {
+    -moz-appearance: textfield; /* Firefox */
+    appearance: textfield;
+    font-size: 1.1rem;
+    padding: 0.75rem;
+  }
+
+  /* Remove spinner buttons for Chrome, Safari, Edge, Opera on mobile */
+  .exercise-entry input[type="number"]::-webkit-outer-spin-button,
+  .exercise-entry input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+}
+
 .exercise-entry input[type="checkbox"] {
   margin-top: 0.5rem;
   width: 1.2em;
@@ -132,8 +197,7 @@ h1, h2, h3 {
 }
 .routine-form button[type="submit"],
 .routine-form button[type="button"] {
-  width: 100%;
-  padding: 0.75rem;
+  padding: 0.75rem 1.5rem;
   margin-top: 0.5rem;
   font-size: 1.1rem;
   border: none;
@@ -146,6 +210,7 @@ h1, h2, h3 {
 }
 .routine-form button[type="button"] {
   background: #888;
+  margin-left: 0.5rem;
 }
 .routine-form button:disabled {
   background: #bdbdbd;
@@ -280,6 +345,9 @@ h1, h2, h3 {
   .history th, .history td {
     border-color: #333;
   }
+  .rep-goal {
+    color: #aaa;
+  }
 }
 
 .history {
@@ -397,23 +465,11 @@ h1, h2, h3 {
   }
 }
 
-.exercise-title {
-  min-width: 100%;
-  text-align: center;
+.collapse-toggle span {
+  display: inline-block;
+  transition: transform 0.2s;
 }
-.collapse-toggle {
-  width: fit-content;
-  position: absolute;
-  right: 1rem;
-  top: 0.5rem;
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: inherit;
-  padding: 0.25em 0.5em;
-  font-size: 1.2em;
-  line-height: 1;
-  display: flex;
-  align-items: center;
-  z-index: 2;
+
+.collapse-toggle span.open {
+  transform: rotate(90deg);
 }
