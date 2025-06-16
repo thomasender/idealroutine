@@ -1,0 +1,137 @@
+.routine-form {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.exercise-navigation {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.nav-button {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  padding: 5px 10px;
+  color: #666;
+  transition: color 0.2s;
+}
+
+.nav-button:hover:not(:disabled) {
+  color: #000;
+}
+
+.nav-button:disabled {
+  color: #ccc;
+  cursor: not-allowed;
+}
+
+.exercise-counter {
+  font-size: 14px;
+  color: #666;
+}
+
+.exercise-entry {
+  margin-bottom: 20px;
+}
+
+.exercise-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.exercise-title {
+  margin: 0;
+  font-size: 20px;
+  color: #333;
+}
+
+.rep-goal {
+  font-size: 14px;
+  color: #666;
+  background: #f5f5f5;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.exercise-fields {
+  display: grid;
+  gap: 15px;
+}
+
+.exercise-fields label {
+  display: grid;
+  gap: 5px;
+  font-size: 14px;
+  color: white;
+}
+
+.exercise-fields input[type="number"],
+.exercise-fields input[type="text"] {
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.exercise-fields input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+}
+
+.last-info {
+  font-size: 12px;
+  color: #666;
+  margin-left: 8px;
+}
+
+.form-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.form-actions button {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.form-actions button[type="submit"] {
+  background-color: #007bff;
+  color: white;
+}
+
+.form-actions button[type="submit"]:hover:not(:disabled) {
+  background-color: #0056b3;
+}
+
+.form-actions button[type="button"] {
+  background-color: #f8f9fa;
+  color: #333;
+}
+
+.form-actions button[type="button"]:hover {
+  background-color: #e9ecef;
+}
+
+.form-actions button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.save-msg {
+  font-size: 14px;
+  color: #28a745;
+} 

@@ -1,0 +1,31 @@
+.routine-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid #dee2e6;
+  padding-bottom: 0.5rem;
+}
+
+.routine-tabs button {
+  padding: 0.5rem 1rem;
+  border: none;
+  background: none;
+  color: #6c757d;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.routine-tabs button:hover {
+  background-color: #f8f9fa;
+  color: #495057;
+}
+
+.routine-tabs button.active {
+  background-color: #007bff;
+  color: white;
+}
+
+.routine-tabs button.active:hover {
+  background-color: #0056b3;
+} 
