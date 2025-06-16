@@ -79,10 +79,18 @@
     padding-left: 50%;
   }
 
+  .history td[data-label="Date"] {
+    padding-left: 0.75rem;
+    text-align: left;
+  }
+
+  .history td[data-label="Date"]::before {
+    display: none;
+  }
+
   .history td::before {
     content: attr(data-label);
-    position: absolute;
-    left: 0.75rem;
+    display: inline-block;
     width: 45%;
     padding-right: 0.75rem;
     text-align: left;
